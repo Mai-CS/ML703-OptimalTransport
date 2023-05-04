@@ -10,7 +10,6 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.init as init
-import torchvision
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 from torch.autograd import Variable
@@ -339,10 +338,6 @@ def train_OT(
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=10, eta_min=1e-6
         )
-        # max_epoch = lr_lambda(epoch)
-        # scheduler = torch.optim.lr_scheduler.LambdaLR(
-        #     optimizer, lr_lambda=lambda epoch: max_epoch
-        # )
     else:
         adjust_lr(optimizer, epoch)
         print("Overall lr: ", optimizer.param_groups[0]["lr"])
@@ -400,9 +395,6 @@ def train_OT(
             Attoptimizer, T_max=10, eta_min=1e-6
         )
         for ot_epoch in range(10):
-            # if not args.cos:
-            # adjust_lr(Attoptimizer, ot_epoch)
-
             feature_train, _, _ = model(inputs)
             probability_train = softmax_normalize(weights)
 
@@ -442,7 +434,6 @@ def train_OT(
             Attoptimizer.zero_grad()
             OTloss.backward(retain_graph=False)
             Attoptimizer.step()
-            # if args.cos:
             ot_scheduler.step()
 
         weightsbuffer[ids] = weights.data
@@ -468,7 +459,6 @@ def train_OT(
 
         del weights
 
-        # prec_train = accuracy(logits.data, labels, topk=(1,))[0]
         prec_train = calc_acc(probs, labels)[0]
         f1_acc = calc_f1(probs, labels)[0]
         try:
@@ -541,15 +531,6 @@ def validate(test_loader, model):
             input, requires_grad=False
         )
 
-        # # input_var = torch.autograd.Variable(input)
-        # input[0][0] = torch.autograd.Variable(input[0][0])
-        # input[0][1] = torch.autograd.Variable(input[0][1])
-        # input[1] = torch.autograd.Variable(input[1])
-        # input[2] = torch.autograd.Variable(input[2])
-        # input[3] = torch.autograd.Variable(input[3])
-
-        # target = torch.autograd.Variable(target)
-
         with torch.no_grad():
             _, output, probs = model(input)
 
@@ -566,7 +547,7 @@ def validate(test_loader, model):
                 output.data.squeeze(1), targets_var.float(), reduction="none"
             )
         )
-        # prec1 = accuracy(output.data, target, topk=(1,))[0]
+
         prec1 = calc_acc(probs, target)[0]
         f1_acc = calc_f1(probs, target)[0]
         try:
@@ -676,6 +657,7 @@ def build_model(load_pretrain, ckpt_path=None, optimizer_a=None):
     return model
 
 
+# For model averaging
 def combine_models(current_model):
     path = "checkpoint/ours/"
     save_name = args.save_name
@@ -714,14 +696,6 @@ def to_var_x(x, requires_grad=True):
         bert_sent_type = bert_sent_type.to(device)
         bert_sent_mask = bert_sent_mask.to(device)
 
-    # if requires_grad:
-    #     return (
-    #         torch.autograd.Variable(ti),
-    #         torch.autograd.Variable(ts),
-    #         torch.autograd.Variable(bert_sent),
-    #         torch.autograd.Variable(bert_sent_type),
-    #         torch.autograd.Variable(bert_sent_mask),
-    #     )
     if requires_grad:
         return (
             Variable(ti, requires_grad=requires_grad),
@@ -812,9 +786,6 @@ def calc_f1(prob, target):
     :param output: the output of the model, which is a tensor of shape (batch_size, num_classes)
     :param target: the ground truth labels
     """
-    # with torch.no_grad():
-    # prob = F.sigmoid(output)
-    # pred = (prob[:, 0] > 0.5).int()
     pred = (prob > 0.5).int()
     pred = pred.view(-1).cpu().detach().numpy()
     target = target.view(-1).cpu().detach().numpy()
@@ -831,10 +802,6 @@ def calc_auroc(probabilities, target):
     :return: The area under the ROC curve.
     """
 
-    # with torch.no_grad():
-    # probabilities = F.softmax(output, dim=1)[:, 1]
-    # probabilities = F.sigmoid(output)[:, 1]
-    # probabilities = probabilities[:, 1].cpu().detach().numpy()
     probabilities = probabilities.cpu().detach().numpy()
     target = target.cpu().detach().numpy()
 
@@ -854,10 +821,6 @@ def calc_aupr(probabilities, target):
     :param target: the ground truth labels
     :return: The area under the precision-recall curve.
     """
-    # with torch.no_grad():
-    # probabilities = F.softmax(output, dim=1)[:, 1]
-    # probabilities = F.sigmoid(output)[:, 1]
-    # probabilities = probabilities[:, 1].cpu().detach().numpy()
     probabilities = probabilities.cpu().detach().numpy()
     target = target.cpu().detach().numpy()
 
@@ -869,13 +832,9 @@ def calc_aupr(probabilities, target):
 
 
 def calc_acc(prob, target):
-    # prob = F.sigmoid(output)
-    # pred = (prob[:, 0] > 0.5).int()
     pred = (prob > 0.5).int()
     pred = pred.view(-1).cpu().detach().numpy()
     target = target.view(-1).cpu().detach().numpy()
-    # print("max prob:", prob.max())
-    # print("min prob:", prob.min())
 
     return [metrics.accuracy_score(target, pred)]
 
@@ -919,25 +878,6 @@ def adjust_lr(optimizer, epoch):
             lr *= 0.1 if epoch >= milestone else 1.0
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
-
-
-def lr_lambda(current_epoch):
-    current_step = (
-        current_epoch * len(imbalanced_train_loader.dataset.y) // args.batch_size
-    )
-    # num_training_steps = (
-    #     args.epochs * len(imbalanced_train_loader.dataset.y) // args.batch_size
-    # )
-    num_training_steps = 1000
-    num_warmup_steps = 0.1
-    # num_warmup_steps = int(num_training_steps * 0.1)
-    if current_step < num_warmup_steps:
-        return float(current_step) / float(max(1, num_warmup_steps))
-    return max(
-        0.0,
-        float(num_training_steps - current_step)
-        / float(max(1, num_training_steps - num_warmup_steps)),
-    )
 
 
 if __name__ == "__main__":

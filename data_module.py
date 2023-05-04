@@ -22,63 +22,6 @@ class LabeledSubset(Subset):
         return x, y, index
 
 
-# class EHRDataset(Dataset):
-#     def __init__(self, split, notes, discrete, merge):
-#         self.class_indices = {}
-#         self.notes = notes
-#         self.discrete = discrete
-#         self.merge = merge
-#         self.X = split["X"][()]
-#         self.s = split["S"][()]
-#         self.y = split["label"][()]
-#         assert len(self.X) == len(self.s) and len(self.X) == len(self.y)
-#         if self.notes:
-#             if self.discrete:
-#                 self.time = split["time"][()]
-#             self.input_ids = split["input_ids"][()]
-#             self.token_type_ids = split["token_type_ids"][()]
-#             self.attention_mask = split["attention_mask"][()]
-#             assert len(self.input_ids) == len(self.y)
-
-#     def __getitem__(self, index):
-#         xi = self.X[index]
-#         si = self.s[index]
-#         L, D = xi.shape
-#         if self.merge:
-#             xi = np.hstack((xi, np.tile(si, (L, 1))))  # time dependent
-#             x = torch.from_numpy(xi).float()
-#         else:
-#             si = torch.from_numpy(si).float()  # time invariant
-#             xi = torch.from_numpy(xi).float()
-#             x = (si, xi)
-#         if self.notes:
-#             if self.discrete:
-#                 base = torch.zeros((L, self.input_ids[0].shape[-1]))
-#                 input_ids = torch.scatter(
-#                     base, 0, self.time[index], self.input_ids[index]
-#                 )
-#                 token_type_ids = torch.scatter(
-#                     base, 0, self.time[index], self.token_type_ids[index]
-#                 )
-#                 attention_mask = torch.scatter(
-#                     base, 0, self.time[index], self.attention_mask[index]
-#                 )
-#             else:
-#                 input_ids = torch.tensor(self.input_ids[index])
-#                 token_type_ids = torch.tensor(self.token_type_ids[index])
-#                 attention_mask = torch.tensor(self.attention_mask[index])
-#             x = (x, input_ids, token_type_ids, attention_mask)
-#         # y = torch.tensor(self.y[index]).float()
-#         target = self.y[index]
-#         if target not in self.class_indices:
-#             self.class_indices[target] = index
-#         y = torch.LongTensor([np.int64(self.y[index])])
-#         return x, y, index
-
-#     def __len__(self):
-#         return len(self.y)
-
-
 class EHRDataset(Dataset):
     def __init__(self, split, notes, discrete, merge):
         self.notes = notes
