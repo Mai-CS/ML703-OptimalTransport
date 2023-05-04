@@ -1,52 +1,24 @@
-# reweight-imbalance-classification-with-OT
+# Imbalanced Classification of Electronic Health Records using Optimal Transport
 
-Code for  "Learning to Re-weight Examples with Optimal Transport for Imbalanced Classification", in NeurIPS 2022.
+Effective prediction of acute respiratory failure is critical for proactive healthcare management. Electronic health records (EHRs) provide rich patient information that can aid in prediction, but the imbalanced class distribution poses a challenge. In this study, we propose a novel approach that uses optimal transport (OT) for imbalanced classification of EHRs, combined with multimodality fusion. Specifically, we leverage multiple modalities of patient data, including clinical notes, demographics, vital signs, and laboratory results, to provide a comprehensive view of a patient's health status. Results show that our approach significantly improves prediction performance by leveraging the OT framework, which optimally matches the probability distributions of the imbalanced classes.
 
+## Requirements
 
-Requirements:
+Python 3.6 <br>
+PyTorch 1.7.1 <br>
+tqdm 4.19.9 <br>
+torchvision 0.8.2 <br>
+numpy 1.19.2 <br>
 
-Python 3.6
-PyTorch 1.7.1
-tqdm 4.19.9
-torchvision 0.8.2
-numpy 1.19.2
+## Results
+Comparison of results between single modalities and multimodality
+<a href="https://ibb.co/BGK0Y5g"><img src="https://i.ibb.co/dtJ8HwQ/Screenshot-2023-05-05-at-2-28-57-AM.png" alt="Screenshot-2023-05-05-at-2-28-57-AM" border="0" width="80%"></a> <br>
+Comparison of results between BCE loss only and BCE loss combined with OT loss using
+the fused model
+<a href="https://ibb.co/BPNn3yj"><img src="https://i.ibb.co/1n6zQrK/Screenshot-2023-05-05-at-2-24-31-AM.png" alt="Screenshot-2023-05-05-at-2-24-31-AM" border="0" width="80%"></a>
 
-
-
-Stage1: 
-
-Pretrain the backbone with the imbalanced training set. See paper for more detailes.
-
-Adjust your file path according to the code.
-
-Stage2:
-
-Learn the weight vector by optimizing OT loss and update the recognition model.
-Run: OT_train.py
-
-
-Abstract: Imbalanced data pose challenges for deep learning based classification models. One
-of the most widely-used approaches for tackling imbalanced data is re-weighting,
-where training samples are associated with different weights in the loss function.
-Most of existing re-weighting approaches treat the example weights as the learnable
-parameter and optimize the weights on the meta set, entailing expensive bilevel
-optimization. In this paper, we propose a novel re-weighting method based on
-optimal transport (OT) from a distributional point of view. Specifically, we view
-the training set as an imbalanced distribution over its samples, which is transported
-by OT to a balanced distribution obtained from the meta set. The weights of
-the training samples are the probability mass of the imbalanced distribution and
-learned by minimizing the OT distance between the two distributions. Compared
-with existing methods, our proposed one disengages the dependence of the weight
-learning on the concerned classifier at each iteration. Experiments on image,
-text and point cloud datasets demonstrate that our proposed re-weighting method
-has excellent performance, achieving state-of-the-art results in many cases and
-providing a promising tool for addressing the imbalanced classification issue.
-
-
-
-@inproceedings{Guo2022reweight,
-title={Learning to Re-weight Examples with Optimal Transport for Imbalanced Classification},
-author={Guo, Dandan and Li, Zhuo and Zheng, Meixi and Zhao, He and Zhou, Mingyuan and Zha, Hongyuan},
-booktitle={Proceedings of the Advances in Neural Information Processing Systems (NeurIPS)},
-year={2022}
-}
+## How to use
+<b>Note</b> This repo is configured to run on CSCC @MBZUAI
+- Change data path <br>
+- Change configuration setup in <b>run.sh</b> <br>
+- Run <b>OT_train.py</b> using this command <code> sh run.sh </code> <br>
