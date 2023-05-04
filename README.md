@@ -1,14 +1,15 @@
 # Imbalanced Classification of Electronic Health Records using Optimal Transport
 
-Code for  ML703 project @MBZUAI
-
-
 ## Requirements:
 
 Python 3.6
+
 PyTorch 1.7.1
+
 tqdm 4.19.9
+
 torchvision 0.8.2
+
 numpy 1.19.2
 
 ## Abstract
